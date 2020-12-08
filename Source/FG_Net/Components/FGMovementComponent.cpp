@@ -66,6 +66,7 @@ void UFGMovementComponent::Internal_SetFacingRotation(const FRotator& InFacingRo
 	NewRotation.Roll = 0.0f;
 	NewRotation.Pitch = 0.0f;
 	FacingRotationTarget = NewRotation;
+	FacingRotationSpeed = InRotationSpeed;
 
 	if (InRotationSpeed < 0.0f)
 	{
