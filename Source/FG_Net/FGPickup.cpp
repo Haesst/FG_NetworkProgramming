@@ -28,7 +28,7 @@ AFGPickup::AFGPickup()
 void AFGPickup::ReActivatePickup()
 {
 	bPickedUp = false;
-	RootComponent->SetVisibility(true, true);
+	ShowPickup();
 	SphereComponent->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 	SetActorTickEnabled(true);
 
@@ -97,4 +97,9 @@ void AFGPickup::HandlePickup()
 void AFGPickup::HidePickup()
 {
 	RootComponent->SetVisibility(false, true);
+}
+
+void AFGPickup::ShowPickup()
+{
+	RootComponent->SetVisibility(true, true);
 }

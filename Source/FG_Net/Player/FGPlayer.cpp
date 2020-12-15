@@ -367,7 +367,12 @@ void AFGPlayer::OnPickup(AFGPickup* Pickup)
 	{
 		if (HasAuthority())
 		{
-			Server_OnPickup(Pickup);
+			if (Pickup->PickupType == EFGPickupType::Rocket)
+			{
+				HandleRocketPickup(Pickup);
+			}
+
+			Pickup->HandlePickup();
 		}
 		else if (IsLocallyControlled())
 		{
@@ -376,16 +381,23 @@ void AFGPlayer::OnPickup(AFGPickup* Pickup)
 	}
 }
 
+void AFGPlayer::HandleRocketPickup(AFGPickup* Pickup)
+{
+	ServerNumRockets += Pickup->NumRockets;
+	Multicast_OnPickupRockets(Pickup, Pickup->NumRockets);
+}
+
 void AFGPlayer::Server_OnPickup_Implementation(AFGPickup* Pickup)
 {
+	Client_OnPickup(Pickup->IsPickedUp(), Pickup);
+}
 
-	if (Pickup->PickupType == EFGPickupType::Rocket)
+void AFGPlayer::Client_OnPickup_Implementation(bool ConfirmedPickup, AFGPickup* Pickup)
+{
+	if (!ConfirmedPickup)
 	{
-		ServerNumRockets += Pickup->NumRockets;
-		Multicast_OnPickupRockets(Pickup, Pickup->NumRockets);
+		Pickup->ShowPickup();
 	}
-
-	Pickup->HandlePickup();
 }
 
 void AFGPlayer::Multicast_OnPickupRockets_Implementation(AFGPickup* Pickup, int32 PickedUpRockets)

@@ -98,6 +98,8 @@ private:
 	void ShowDebugMenu();
 	void HideDebugMenu();
 
+	void HandleRocketPickup(AFGPickup* Pickup);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -137,6 +139,8 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void Server_OnPickup(AFGPickup* Pickup);
+	UFUNCTION(Client, Reliable)
+	void Client_OnPickup(bool ConfirmedPickup, AFGPickup* Pickup);
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_OnPickupRockets(AFGPickup* Pickup, int32 PickedUpRockets);
 

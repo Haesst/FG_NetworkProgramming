@@ -39,6 +39,7 @@ public:
 	bool IsPickedUp();
 	void HandlePickup();
 	void HidePickup();
+	void ShowPickup();
 
 	UPROPERTY(VisibleDefaultsOnly, Category = Collision)
 	USphereComponent* SphereComponent;
