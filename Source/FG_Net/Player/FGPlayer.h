@@ -137,8 +137,8 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void Server_OnPickup(AFGPickup* Pickup);
-	UFUNCTION(Server, Reliable)
-	void Client_OnPickupRockets(AFGPickup* Pickup, int32 PickedUpRockets);
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_OnPickupRockets(AFGPickup* Pickup, int32 PickedUpRockets);
 
 	UFUNCTION(Server, Reliable)
 	void Server_FireRocket(AFGRocket* NewRocket, const FVector& RocketStartLocation, const FRotator& RocketFacingRotation);

@@ -86,7 +86,6 @@ void AFGPlayer::FireRocket()
 
 	if (NumRockets <= 0 && !bUnlimitedRockets)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("NumRockets: %i"), NumRockets);
 		return;
 	}
 
@@ -115,6 +114,7 @@ void AFGPlayer::FireRocket()
 			NumRockets--;
 			NewRocket->StartMoving(GetActorForwardVector(), GetRocketStartLocation());
 			Server_FireRocket(NewRocket, GetRocketStartLocation(), GetActorRotation());
+			BP_OnNumRocketsChanged(NumRockets);
 		}
 	}
 }
@@ -149,6 +149,11 @@ void AFGPlayer::Multicast_FireRocket_Implementation(AFGRocket* NewRocket, const 
 	{
 		NumRockets--;
 		NewRocket->StartMoving(RocketFacingRotation.Vector(), RocketStartLocation);
+	}
+
+	if (!IsLocallyControlled())
+	{
+		BP_OnNumRocketsChanged(NumRockets);
 	}
 }
 
@@ -358,10 +363,37 @@ int32 AFGPlayer::GetPing() const
 
 void AFGPlayer::OnPickup(AFGPickup* Pickup)
 {
-	if (IsLocallyControlled())
+	if (GetLocalRole() >= ROLE_AutonomousProxy)
 	{
-		Server_OnPickup(Pickup);
+		if (HasAuthority())
+		{
+			Server_OnPickup(Pickup);
+		}
+		else if (IsLocallyControlled())
+		{
+			Pickup->HidePickup();
+		}
 	}
+}
+
+void AFGPlayer::Server_OnPickup_Implementation(AFGPickup* Pickup)
+{
+
+	if (Pickup->PickupType == EFGPickupType::Rocket)
+	{
+		ServerNumRockets += Pickup->NumRockets;
+		Multicast_OnPickupRockets(Pickup, Pickup->NumRockets);
+	}
+
+	Pickup->HandlePickup();
+}
+
+void AFGPlayer::Multicast_OnPickupRockets_Implementation(AFGPickup* Pickup, int32 PickedUpRockets)
+{
+	UE_LOG(LogTemp, Warning, TEXT("This might not be logged for each client but lets see"));
+	NumRockets += PickedUpRockets;
+	BP_OnNumRocketsChanged(NumRockets);
+	Pickup->HandlePickup();
 }
 
 void AFGPlayer::ShowDebugMenu()
@@ -411,7 +443,6 @@ void AFGPlayer::Multicast_SendLocation_Implementation(const FVector& LocationToS
 {
 	if (!IsLocallyControlled())
 	{
-		// DesiredLocation = LocationToSend; <- my solution
 		SetActorLocation(LocationToSend);
 	}
 }
@@ -432,31 +463,6 @@ void AFGPlayer::Multicast_SendFaceDirection_Implementation(const FQuat& FaceDire
 void AFGPlayer::Server_SendYaw_Implementation(float NewYaw)
 {
 	ReplicatedYaw = NewYaw;
-}
-
-void AFGPlayer::Server_OnPickup_Implementation(AFGPickup* Pickup)
-{
-	UE_LOG(LogTemp, Warning, TEXT("Serverside, Name: %s"), *Pickup->GetName());
-
-	ServerNumRockets += Pickup->NumRockets;
-	Client_OnPickupRockets(Pickup, Pickup->NumRockets);
-	Pickup->HandlePickup();
-}
-
-void AFGPlayer::Client_OnPickupRockets_Implementation(AFGPickup* Pickup, int32 PickedUpRockets)
-{
-	if (Pickup == nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Pickup is nullptr in client"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Clientside, Name: %s"), *Pickup->GetName());
-	}
-
-	NumRockets += PickedUpRockets;
-	UE_LOG(LogTemp, Warning, TEXT("Picked up: %i | Total: %i"), PickedUpRockets, NumRockets);
-	BP_OnNumRocketsChanged(NumRockets);
 }
 
 void AFGPlayer::CreateDebugWidget()
