@@ -3,6 +3,7 @@
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
+#include "Player/FGPlayer.h"
 
 void AFGRocket::SetRocketVisibility(bool bVisible)
 {
@@ -65,6 +66,10 @@ void AFGRocket::Tick(float DeltaTime)
 
 	if (Hit.bBlockingHit)
 	{
+		if (AFGPlayer* Player = Cast<AFGPlayer>(Hit.Actor))
+		{
+			Player->HitPlayerWithRocket(this);
+		}
 		Explode();
 	}
 

@@ -278,6 +278,7 @@ void AFGPlayer::BeginPlay()
 	SpawnRockets();
 
 	BP_OnNumRocketsChanged(NumRockets);
+	BP_OnHealthChanged(Health);
 	OriginalMeshOffset = MeshComponent->GetRelativeLocation();
 }
 
@@ -361,6 +362,35 @@ int32 AFGPlayer::GetPing() const
 	return 0;
 }
 
+#pragma region RocketHits
+
+void AFGPlayer::HitPlayerWithRocket(AFGRocket* Rocket)
+{
+	if (GetLocalRole() >= ROLE_AutonomousProxy)
+	{
+		if (HasAuthority())
+		{
+			// Reduce health
+			--ServerHealth;
+			Multicast_HitByRocket(Rocket);
+		}
+		else if (IsLocallyControlled())
+		{
+			// Do stuff prethingy
+		}
+	}
+}
+
+void AFGPlayer::Multicast_HitByRocket_Implementation(AFGRocket* Rocket)
+{
+	--Health;
+	BP_OnHealthChanged(Health);
+}
+
+#pragma endregion RocketHits
+
+#pragma region Pickups
+
 void AFGPlayer::OnPickup(AFGPickup* Pickup)
 {
 	if (GetLocalRole() >= ROLE_AutonomousProxy)
@@ -370,6 +400,10 @@ void AFGPlayer::OnPickup(AFGPickup* Pickup)
 			if (Pickup->PickupType == EFGPickupType::Rocket)
 			{
 				HandleRocketPickup(Pickup);
+			}
+			else if (Pickup->PickupType == EFGPickupType::Health)
+			{
+				HandleHealthPickup(Pickup);
 			}
 
 			Pickup->HandlePickup();
@@ -387,6 +421,12 @@ void AFGPlayer::HandleRocketPickup(AFGPickup* Pickup)
 	Multicast_OnPickupRockets(Pickup, Pickup->NumRockets);
 }
 
+void AFGPlayer::HandleHealthPickup(AFGPickup* Pickup)
+{
+	ServerHealth += Pickup->NumRockets;
+	Multicast_OnPickupHealth(Pickup, Pickup->NumRockets);
+}
+
 void AFGPlayer::Server_OnPickup_Implementation(AFGPickup* Pickup)
 {
 	Client_OnPickup(Pickup->IsPickedUp(), Pickup);
@@ -402,11 +442,19 @@ void AFGPlayer::Client_OnPickup_Implementation(bool ConfirmedPickup, AFGPickup* 
 
 void AFGPlayer::Multicast_OnPickupRockets_Implementation(AFGPickup* Pickup, int32 PickedUpRockets)
 {
-	UE_LOG(LogTemp, Warning, TEXT("This might not be logged for each client but lets see"));
 	NumRockets += PickedUpRockets;
 	BP_OnNumRocketsChanged(NumRockets);
 	Pickup->HandlePickup();
 }
+
+void AFGPlayer::Multicast_OnPickupHealth_Implementation(AFGPickup* Pickup, int32 PickedUpHealthValue)
+{
+	Health += PickedUpHealthValue;
+	BP_OnHealthChanged(Health);
+	Pickup->HandlePickup();
+}
+
+#pragma endregion
 
 void AFGPlayer::ShowDebugMenu()
 {

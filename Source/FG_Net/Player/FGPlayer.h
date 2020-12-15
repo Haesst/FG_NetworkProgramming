@@ -49,6 +49,9 @@ private:
 
 	int32 ServerNumRockets = 0;
 	int32 NumRockets = 0;
+	int32 ServerHealth = 3;
+	int32 Health = 3;
+
 	FVector GetRocketStartLocation() const;
 	AFGRocket* GetFreeRocket() const;
 
@@ -99,6 +102,7 @@ private:
 	void HideDebugMenu();
 
 	void HandleRocketPickup(AFGPickup* Pickup);
+	void HandleHealthPickup(AFGPickup* Pickup);
 
 protected:
 	virtual void BeginPlay() override;
@@ -117,10 +121,14 @@ public:
 	int32 GetNumRockets() const { return NumRockets; }
 	UFUNCTION(BlueprintImplementableEvent, Category = Player, meta = (DisplayName = "On Num Rockets Changed"))
 	void BP_OnNumRocketsChanged(int32 NewNumRockets);
+	UFUNCTION(BlueprintImplementableEvent, Category = Player, meta = (DisplayName = "On Health Changed"))
+	void BP_OnHealthChanged(int32 NewHealth);
 
 	int32 GetNumActiveRockets() const;
 	void FireRocket();
 	void SpawnRockets();
+
+	void HitPlayerWithRocket(AFGRocket* Rocket);
 
 	UFUNCTION(Server, Unreliable)
 	void Server_SendLocation(const FVector& LocationToSend);
@@ -143,6 +151,8 @@ public:
 	void Client_OnPickup(bool ConfirmedPickup, AFGPickup* Pickup);
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_OnPickupRockets(AFGPickup* Pickup, int32 PickedUpRockets);
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_OnPickupHealth(AFGPickup* Pickup, int32 PickedUpHealthValue);
 
 	UFUNCTION(Server, Reliable)
 	void Server_FireRocket(AFGRocket* NewRocket, const FVector& RocketStartLocation, const FRotator& RocketFacingRotation);
@@ -152,6 +162,9 @@ public:
 
 	UFUNCTION(Client, Reliable)
 	void Client_RemoveRocket(AFGRocket* RocketToRemove);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_HitByRocket(AFGRocket* Rocket);
 
 	UFUNCTION(BlueprintCallable)
 	void Cheat_IncreaseRockets(int32 InNumRockets);
