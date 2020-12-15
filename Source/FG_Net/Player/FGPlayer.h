@@ -27,6 +27,15 @@ private:
 	bool bBrake = false;
 	bool bShowDebugMenu = false;
 
+	float ClientTimeStamp = 0.0f;
+	float LastCorrectionDelta = 0.0f;
+	float ServerTimeStamp = 0.0f;
+
+	UPROPERTY(EditAnywhere, Category = Network)
+	bool bPerformNetworkSmoothing = true;
+
+	FVector OriginalMeshOffset = FVector::ZeroVector;
+
 	UPROPERTY(Replicated)
 	float ReplicatedYaw = 0.0f;
 
@@ -42,6 +51,8 @@ private:
 	int32 NumRockets = 0;
 	FVector GetRocketStartLocation() const;
 	AFGRocket* GetFreeRocket() const;
+
+	void AddMovementVelocity(float DeltaTime);
 
 	UPROPERTY(VisibleDefaultsOnly, Category = Collision)
 	USphereComponent* CollisionComponent;
@@ -70,9 +81,6 @@ public:
 
 	int32 MaxActiveRockets = 3;
 	float FireCooldownElapsed = 0.0f;
-
-	UPROPERTY(EditAnywhere, Category = Movement, meta = (DisplayName = "Network Interpolation Speed"))
-	float NetworkInterpolationSpeed = 5.0f; // Move to player settings
 
 public:
 	AFGPlayer();
@@ -143,4 +151,10 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void Cheat_IncreaseRockets(int32 InNumRockets);
+
+	UFUNCTION(Server, Unreliable)
+	void Server_SendMovement(const FVector& ClientLocation, float TimeStamp, float ClientForward, float ClientYaw);
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_SendMovement(const FVector& InClientLocation, float TimeStamp, float ClientForward, float ClientYaw);
 };
