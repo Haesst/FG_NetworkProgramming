@@ -51,6 +51,10 @@ private:
 	int32 NumRockets = 0;
 	int32 ServerHealth = 3;
 	int32 Health = 3;
+	FTimerHandle HealthRevertHandle;
+
+	int32 LastFramePing = 0;
+	int32 TwoFramesAgoPing = 0;
 
 	FVector GetRocketStartLocation() const;
 	AFGRocket* GetFreeRocket() const;
@@ -100,9 +104,15 @@ private:
 	void CreateDebugWidget();
 	void ShowDebugMenu();
 	void HideDebugMenu();
+	void RevertHealth();
 
 	void HandleRocketPickup(AFGPickup* Pickup);
 	void HandleHealthPickup(AFGPickup* Pickup);
+
+	uint8 NetSerializeYaw(float InYaw);
+	float NetUnserializeYaw(uint8 InYaw);
+
+	int32 GetAveragePing(int32 NewPing);
 
 protected:
 	virtual void BeginPlay() override;
@@ -152,7 +162,7 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_OnPickupRockets(AFGPickup* Pickup, int32 PickedUpRockets);
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_OnPickupHealth(AFGPickup* Pickup, int32 PickedUpHealthValue);
+	void Multicast_OnPickupHealth(AFGPickup* Pickup, int32 NewHealth);
 
 	UFUNCTION(Server, Reliable)
 	void Server_FireRocket(AFGRocket* NewRocket, const FVector& RocketStartLocation, const FRotator& RocketFacingRotation);
@@ -161,7 +171,7 @@ public:
 	void Multicast_FireRocket(AFGRocket* NewRocket, const FVector& RocketStartLocation, const FRotator& RocketFacingRotation);
 
 	UFUNCTION(Client, Reliable)
-	void Client_RemoveRocket(AFGRocket* RocketToRemove);
+	void Client_RemoveRocket(AFGRocket* RocketToRemove, int RocketAmount);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_HitByRocket(AFGRocket* Rocket);
@@ -170,8 +180,8 @@ public:
 	void Cheat_IncreaseRockets(int32 InNumRockets);
 
 	UFUNCTION(Server, Unreliable)
-	void Server_SendMovement(const FVector& ClientLocation, float TimeStamp, float ClientForward, float ClientYaw);
+	void Server_SendMovement(const FVector& ClientLocation, float TimeStamp, float ClientForward, uint8 ClientYaw);
 
 	UFUNCTION(NetMulticast, Unreliable)
-	void Multicast_SendMovement(const FVector& InClientLocation, float TimeStamp, float ClientForward, float ClientYaw);
+	void Multicast_SendMovement(const FVector& InClientLocation, float TimeStamp, float ClientForward, uint8 ClientYaw);
 };
