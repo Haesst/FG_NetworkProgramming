@@ -257,6 +257,7 @@ void AFGPlayer::FireRocket()
 		if (HasAuthority())
 		{
 			Server_FireRocket(NewRocket, GetRocketStartLocation(), GetActorRotation());
+			BP_OnNumRocketsChanged(NumRockets);
 		}
 		else
 		{
