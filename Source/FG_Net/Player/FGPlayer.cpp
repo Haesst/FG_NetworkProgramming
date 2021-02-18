@@ -489,10 +489,6 @@ void AFGPlayer::HitPlayerWithRocket(AFGRocket* Rocket)
 			--ServerHealth;
 			Multicast_HitByRocket(Rocket);
 		}
-		else if (IsLocallyControlled())
-		{
-			// Do stuff prethingy, maybe?
-		}
 	}
 }
 
@@ -552,7 +548,7 @@ void AFGPlayer::OnPickup(AFGPickup* Pickup)
 void AFGPlayer::HandleRocketPickup(AFGPickup* Pickup)
 {
 	ServerNumRockets += Pickup->NumRockets;
-	Multicast_OnPickupRockets(Pickup, Pickup->NumRockets);
+	Multicast_OnPickupRockets(Pickup, ServerNumRockets);
 }
 
 void AFGPlayer::HandleHealthPickup(AFGPickup* Pickup)
@@ -585,10 +581,11 @@ void AFGPlayer::Client_OnPickup_Implementation(bool ConfirmedPickup, AFGPickup* 
 	}
 }
 
-void AFGPlayer::Multicast_OnPickupRockets_Implementation(AFGPickup* Pickup, int32 PickedUpRockets)
+void AFGPlayer::Multicast_OnPickupRockets_Implementation(AFGPickup* Pickup, int32 NewRocketAmount)
 {
-	NumRockets += PickedUpRockets;
+	NumRockets = NewRocketAmount;
 	BP_OnNumRocketsChanged(NumRockets);
+
 	Pickup->HandlePickup();
 }
 

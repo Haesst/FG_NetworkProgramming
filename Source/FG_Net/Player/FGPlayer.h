@@ -52,6 +52,7 @@ private:
 	int32 ServerHealth = 3;
 	int32 Health = 3;
 	FTimerHandle HealthRevertHandle;
+	FTimerHandle RocketRevertHandle;
 
 	int32 LastFramePing = 0;
 	int32 TwoFramesAgoPing = 0;
@@ -160,7 +161,7 @@ public:
 	UFUNCTION(Client, Reliable)
 	void Client_OnPickup(bool ConfirmedPickup, AFGPickup* Pickup);
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_OnPickupRockets(AFGPickup* Pickup, int32 PickedUpRockets);
+	void Multicast_OnPickupRockets(AFGPickup* Pickup, int32 NewRocketAmount);
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_OnPickupHealth(AFGPickup* Pickup, int32 NewHealth);
 
