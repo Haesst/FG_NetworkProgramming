@@ -447,21 +447,18 @@ void AFGPlayer::Server_SendYaw_Implementation(float NewYaw)
 	ReplicatedYaw = NewYaw;
 }
 
-int32 AFGPlayer::GetAveragePing(int32 NewPing)
+float AFGPlayer::GetAveragePing(int32 NewPing)
 {
-	int32 FramesToUse = 1;
-	int32 AveragepingSum = NewPing;
+	float AveragepingSum = NewPing;
 
 	if (LastFramePing != 0)
 	{
 		AveragepingSum += LastFramePing;
-		++FramesToUse;
 	}
 
 	if (TwoFramesAgoPing != 0)
 	{
 		AveragepingSum += TwoFramesAgoPing;
-		++FramesToUse;
 	}
 
 	TwoFramesAgoPing = LastFramePing;
@@ -559,6 +556,10 @@ void AFGPlayer::HandleHealthPickup(AFGPickup* Pickup)
 
 void AFGPlayer::Server_OnPickup_Implementation(AFGPickup* Pickup)
 {
+	if (Pickup->IsPickedUp())
+	{
+		Client_OnPickup(true, Pickup);
+	}
 	Client_OnPickup(Pickup->IsPickedUp(), Pickup);
 }
 

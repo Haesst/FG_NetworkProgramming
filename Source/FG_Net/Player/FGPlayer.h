@@ -113,7 +113,7 @@ private:
 	uint8 NetSerializeYaw(float InYaw);
 	float NetUnserializeYaw(uint8 InYaw);
 
-	int32 GetAveragePing(int32 NewPing);
+	float GetAveragePing(int32 NewPing);
 
 protected:
 	virtual void BeginPlay() override;
